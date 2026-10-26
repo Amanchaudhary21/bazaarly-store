@@ -9,7 +9,7 @@
 
 /* ---------- Google sign-in setup ----------
    Paste your own Google "OAuth client ID" between the quotes to turn on the
-   "Sign in with Google" button. README.txt explains how to get one (free).
+   "Sign in with Google" button. README.md explains how to get one (free).
    Google sign-in only works when the store is opened through start.bat
    (http://localhost:8080), not by double-clicking index.html. */
 const GOOGLE_CLIENT_ID = "";
@@ -157,7 +157,7 @@ function showLogin() {
   /* Google's own button. It needs your Client ID (top of this file) and a http:// address. */
   function mountGoogle(slot) {
     if (!GOOGLE_CLIENT_ID || location.protocol === "file:") {
-      slot.innerHTML = `<p class="g-setup"><b>Sign in with Google is not set up yet.</b> ${!GOOGLE_CLIENT_ID ? "Add your Google Client ID at the top of js/auth.js." : ""}${location.protocol === "file:" ? " Open the store with start.bat instead of double-clicking index.html." : ""} See README.txt.</p>`;
+      slot.innerHTML = `<p class="g-setup"><b>Sign in with Google is not set up yet.</b> ${!GOOGLE_CLIENT_ID ? "Add your Google Client ID at the top of js/core/auth.js." : ""}${location.protocol === "file:" ? " Open the store with start.bat or npm start instead of double-clicking index.html." : ""} See README.md.</p>`;
       return;
     }
     slot.innerHTML = `<p class="g-hint" style="text-align:center">Loading Google…</p>`;
