@@ -159,7 +159,7 @@ P.push(
     ["Aged grains cook up long, fluffy and fragrant", "Naturally gluten free", "5 kg family bag"],
     [["Weight", "5 kg"], ["Grain", "Long"], ["Origin", "Sample"]], "staple pantry cooking food", 85)
 );
-/* Items you added yourself on the "Sell an item" page (saved in this browser, see js/sell.js) */
+/* Items you added yourself on the "Sell an item" page (saved in this browser, see js/pages/sell.js) */
 try { (JSON.parse(localStorage.getItem("bz:mine")) || []).forEach(p => { if (p && p.id && p.photo) P.push(p); }); } catch (e) { /* blocked */ }
 const PM = new Map(P.map(p => [p.id, p]));
 const HERO = [
