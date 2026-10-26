@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bazaarly Market</title>
+
+  <!-- Fonts from Google. This needs internet. Without internet the page uses normal system fonts. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+
+  <!-- Our own CSS file: all the colors and the layout live here -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===================== The page: header, menu, main area, footer ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-star" viewBox="0 0 20 20"><path fill="currentColor" d="M10 1.5l2.6 5.5 6 .8-4.4 4.2 1.1 6L10 15.1 4.7 18l1.1-6L1.4 7.8l6-.8z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path style="fill:var(--heart-fill,none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 20.5S3.5 15.6 3.5 9.6C3.5 6.9 5.5 5 8 5c1.6 0 3.1.9 4 2.3C12.9 5.9 14.400 5 16 5c2.5 0 4.500 1.900 4.500 4.600 0 6-8.500 10.900-8.500 10.900z"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M2.500 4h3l2.300 11h10.200l2.200-8H6.600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.500" cy="19.500" r="1.600" fill="currentColor"/><circle cx="17" cy="19.500" r="1.600" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.500 7.500L12 3l8.500 4.500v9L12 21l-8.500-4.500v-9zM3.500 7.500L12 12l8.500-4.500M12 12v9" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linejoin="round"/></symbol>
+    <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 010 16z" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8zM9 8V6.500a3 3 0 016 0V8" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+<div class="demo-bar" role="note"><strong>Demo store.</strong> Sample products and sample ratings. No real orders, accounts or payments.</div>
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand-link" href="#/" aria-label="Bazaarly home">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 15L8 5h24l3 10z" fill="currentColor"/><path d="M12.500 5L11.500 15M20 5v10M27.500 5l1 10" stroke="var(--brand)" stroke-width="3"/><path d="M5 15q3.750 5 7.500 0 3.750 5 7.500 0 3.750 5 7.500 0 3.750 5 7.500 0z" fill="var(--accent)"/><path d="M9 21v13h22V21" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linejoin="round"/><rect x="16" y="26" width="8" height="8" fill="currentColor"/></svg>
+      <span>bazaarly</span>
+    </a>
+    <form class="search" role="search" id="searchForm" autocomplete="off">
+      <label class="sr" for="searchCat">Department</label>
+      <select id="searchCat"><option value="">All</option></select>
+      <label class="sr" for="searchInput">Search products</label>
+      <input id="searchInput" type="search" placeholder="Search products and categories" role="combobox" aria-expanded="false" aria-controls="suggest" aria-autocomplete="list">
+      <button class="go" type="submit" aria-label="Search"><svg aria-hidden="true"><use href="#i-search"/></svg></button>
+      <ul class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
+    </form>
+    <div class="actions">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch light or dark theme"><svg aria-hidden="true"><use href="#i-contrast"/></svg></button>
+      <a class="icon-btn" href="#/sell" aria-label="Sell an item" title="Sell an item"><svg aria-hidden="true"><use href="#i-plus"/></svg></a>
+      <a class="icon-btn" href="#/wishlist" aria-label="Wish list"><svg aria-hidden="true"><use href="#i-heart"/></svg><span class="count" id="wishCount"></span></a>
+      <a class="icon-btn" href="#/orders" aria-label="Your orders"><svg aria-hidden="true"><use href="#i-box"/></svg></a>
+      <a class="icon-btn" href="#/cart" aria-label="Cart"><svg aria-hidden="true"><use href="#i-cart"/></svg><span class="count" id="cartCount"></span></a>
+    </div>
+  </div>
+</header>
+<div class="awning" aria-hidden="true"></div>
+<nav class="catnav" aria-label="Departments"><div class="wrap"><ul id="catNav"></ul></div></nav>
+
+<main id="main" class="wrap" tabindex="-1"></main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <h3>About this demo</h3>
+        <p>Bazaarly is a practice marketplace that shows how an online store works, from search to checkout. The products, prices and ratings are samples.</p>
+      </div>
+      <div>
+        <h3>What you can try</h3>
+        <ul>
+          <li>Search, filter and sort products</li>
+          <li>Save items to your wish list</li>
+          <li>Fill a cart and use a coupon</li>
+          <li>Place a demo order and see it in Orders</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Store rules</h3>
+        <ul>
+          <li>Free delivery on items over $35</li>
+          <li>Coupons: <span class="mono">WELCOME10</span>, <span class="mono">FREESHIP</span></li>
+          <li>Your cart and orders stay in this browser only</li>
+        </ul>
+        <div class="row" style="margin-top:12px">
+          <button class="btn small" type="button" id="resetBtn">Reset demo data</button>
+          <button class="btn small" type="button" id="topBtn">Back to top</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<!-- ===================== JavaScript files =====================
+     Keep this order. Each file uses things made by the files above it. -->
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/art.js"></script>
+<script src="js/core.js"></script>
+<script src="js/home.js"></script>
+<script src="js/product.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/checkout.js"></script>
+<script src="js/sell.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
