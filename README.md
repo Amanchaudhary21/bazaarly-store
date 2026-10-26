@@ -6,6 +6,13 @@ with a photo, and sign-in with email, phone number or Google.
 
 > Demo only: no real payments, nothing is shipped, and accounts are saved only in your own browser.
 
+## Live site
+
+**https://amanchaudhary21.github.io/bazaarly-store/**
+
+Every push to the `main` branch publishes the `public/` folder again
+(see `.github/workflows/deploy.yml`). It takes about a minute.
+
 ## How to run it
 
 **Easiest:** double-click `public/index.html`. It opens in your browser. No internet needed
@@ -41,6 +48,8 @@ or double-click `start.bat`. The store opens at <http://localhost:8080>. You nee
 │       │   ├── checkout.js  checkout form, order confirmation, Orders page
 │       │   └── sell.js      "Sell an item": add your own product with a photo
 │       └── main.js          starts the store: menus, search box, theme button, clicks
+├── .github/workflows/
+│   └── deploy.yml           publishes public/ to GitHub Pages on every push
 ├── server.js                tiny web server for the public folder (http://localhost:8080)
 ├── start.bat                double-click to start the server and open the store
 ├── package.json             `npm start` runs server.js
@@ -81,7 +90,8 @@ top-right corner of the store to sign out. "Reset demo data" in the footer clear
 1. Start the store with `npm start` or `start.bat` (Google sign-in does not work from a double-clicked `index.html`).
 2. Go to <https://console.cloud.google.com>, make a project, then open **APIs & Services → Credentials**.
 3. Click **Create credentials → OAuth client ID**, type **Web application**.
-   Under **Authorized JavaScript origins** add both `http://localhost` and `http://localhost:8080`.
+   Under **Authorized JavaScript origins** add `http://localhost`, `http://localhost:8080`
+   and, for the live site, `https://amanchaudhary21.github.io`.
 4. Copy the Client ID (it ends with `.apps.googleusercontent.com`).
 5. Open `public/js/core/auth.js`, find `const GOOGLE_CLIENT_ID = "";` and paste it between the quotes.
 6. Save and reload. The Google button now shows on the sign-in page.
