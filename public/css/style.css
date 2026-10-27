@@ -450,7 +450,21 @@ html.locked body > :not(#gate):not(svg) { display: none !important; }
 .g-field input:focus + label, .g-field input:not(:placeholder-shown) + label { top: 5px; font-size: .74rem; }
 .g-field input:focus + label { color: var(--focus); }
 .g-phone { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 10px; }
-.g-phone select { min-height: 54px; border-radius: 8px; }
+.g-phone { position: relative; }
+.g-cc { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 54px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.g-cc:hover { border-color: var(--muted); }
+.g-cc[aria-expanded="true"] { border: 2px solid var(--focus); padding: 0 9px; }
+.g-cc-iso { color: var(--muted); font-size: .8rem; font-weight: 600; }
+.g-cc-pop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5; display: grid; gap: 6px; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow), 0 12px 32px rgba(15, 42, 46, .18); }
+.g-cc-pop[hidden] { display: none; }
+.g-cc-pop input { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); }
+.g-cc-pop input:focus { outline: 2px solid var(--focus); outline-offset: -1px; }
+.g-cc-pop ul { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+.g-cc-pop li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 10px; border-radius: 6px; cursor: pointer; }
+.g-cc-pop li b { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.g-cc-pop li:hover, .g-cc-pop li[aria-selected="true"] { background: var(--surface-2); }
+.g-cc-pop li[aria-selected="true"] { box-shadow: inset 3px 0 0 var(--focus); }
+.g-cc-pop .g-cc-none { color: var(--muted); cursor: default; }
 .g-sms { display: grid; gap: 2px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--tag) 35%, var(--surface)); border: 1px solid color-mix(in srgb, var(--tag) 70%, var(--line)); font-size: .92rem; }
 .g-sms .mono { font-size: 1.15rem; letter-spacing: .12em; }
 .g-sms small { color: var(--muted); }
@@ -517,6 +531,12 @@ html.locked body > :not(#gate):not(svg) { display: none !important; }
 .pf-row dd { margin: 0; overflow-wrap: anywhere; }
 .pf-ways { display: grid; gap: 4px; list-style: none; padding: 0; }
 .pf-sub { font-size: 1rem; margin-top: 14px; }
+.pf-pw-btn { margin-top: 8px; }
+.pf-pw { margin-top: 12px; padding: 16px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.pf-pw .g-sms { margin: 0; }
+.pf-pw input[data-pw], .pf-pw input[type="password"] { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; min-height: 40px; width: 100%; }
+.pf-pw-err { color: var(--bad); font-size: .9rem; }
+.pf-pw-err:empty { display: none; }
 .pf-log { display: grid; list-style: none; padding: 0; margin-top: 6px; }
 .pf-log li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding-block: 8px; border-bottom: 1px solid var(--line); font-size: .92rem; }
 .pf-log li:last-child { border-bottom: 0; }

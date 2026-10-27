@@ -17,7 +17,7 @@ function heroHtml() {
   return `<section class="hero" aria-roledescription="carousel" aria-label="Featured offers">
     ${HERO.map((s, i) => `<div class="slide${i === 0 ? " on" : ""}" style="--s-bg:${s.bg};--s-ink:${s.ink}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${HERO.length}">
       <div><h2>${esc(s.h)}</h2><p>${esc(s.t)}</p><a class="btn" href="${s.to}">${esc(s.cta)}</a></div>
-      ${art(PM.get(s.art[0]), s.art[1])}
+      ${PM.has(s.art[0]) ? art(PM.get(s.art[0]), s.art[1]) : ""}
     </div>`).join("")}
     <div class="hero-ctl"><button type="button" class="hero-pause" data-act="slidepause" aria-pressed="false" aria-label="Pause slideshow"></button>${HERO.map((s, i) => `<button type="button" data-act="slide" data-i="${i}" aria-label="Show slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}</div>
   </section>`;
@@ -105,6 +105,12 @@ function filtersHtml(r) {
     <div class="fgroup"><h3>Availability</h3><label><input type="checkbox" id="fstock" data-chg="f" ${LF.stock ? "checked" : ""}> In stock only</label>
       ${r.mode !== "deals" ? `<label><input type="checkbox" id="fsale" data-chg="f" ${LF.sale ? "checked" : ""}> On sale only</label>` : ""}</div>`;
 }
+/* owner only: "+ Add a product" opens the Sell page with the search words and department filled in */
+function addHere(r) {
+  const name = r.mode === "search" ? r.q.trim() : "", cat = LF.cat || r.cat || "";
+  const qs = new URLSearchParams(Object.entries({ name, cat }).filter(([, v]) => v)).toString();
+  return `<a class="btn" href="#/sell${qs ? "?" + qs : ""}"><svg aria-hidden="true" style="width:18px;height:18px;fill:none"><use href="#i-plus"/></svg>${name ? `Add "${esc(name)}" as a product` : "Add a product"}</a>`;
+}
 function resultsHtml(r) {
   const list = applyFilters(LB), chips = [];
   if (LF.cat && r.mode !== "cat") chips.push(["cat", catName(LF.cat)]);
@@ -117,7 +123,7 @@ function resultsHtml(r) {
   return `<div class="toolbar"><p aria-live="polite"><b>${list.length}</b> ${list.length === 1 ? "product" : "products"}${what}</p>
       <label class="row" for="sortSel"><span class="muted">Sort by</span><select id="sortSel" data-chg="sort">${SORTS.map(([v, l]) => `<option value="${v}" ${LF.sort === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
     ${chips.length ? `<div class="chips">${chips.map(([k, l]) => `<button class="chip" type="button" data-act="unfilter" data-k="${k}">${esc(l)} <span aria-hidden="true">x</span><span class="sr">remove filter</span></button>`).join("")}<button class="link" type="button" data-act="clearf">Clear all</button></div>` : ""}
-    ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty"><svg aria-hidden="true" style="fill:none"><use href="#i-search"/></svg><h2>No products match</h2><p class="muted">${chips.length ? "Try removing a filter." : "Check the spelling, or browse a department."}</p>${chips.length ? `<button class="btn primary" type="button" data-act="clearf">Clear filters</button>` : `<a class="btn primary" href="#/">Browse departments</a>`}</div>`}`;
+    ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty"><svg aria-hidden="true" style="fill:none"><use href="#i-search"/></svg><h2>No products match</h2><p class="muted">${chips.length ? "Try removing a filter." : "Check the spelling, or browse a department."}</p><div class="row" style="justify-content:center">${chips.length ? `<button class="btn primary" type="button" data-act="clearf">Clear filters</button>` : `<a class="btn primary" href="#/">Browse departments</a>`}${IS_OWNER ? addHere(r) : ""}</div></div>`}`;
 }
 function refreshList(full) {
   const r = route;

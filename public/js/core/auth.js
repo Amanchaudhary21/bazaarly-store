@@ -14,6 +14,11 @@
    (http://localhost:8080), not by double-clicking index.html. */
 const GOOGLE_CLIENT_ID = "";
 
+/* ---------- Store owner ----------
+   Only these accounts can add or delete products ("Sell an item").
+   Everyone else can shop but not sell. */
+const OWNER_EMAILS = ["amanecdy@gmail.com"];
+
 /* Country codes for phone sign-in: [country, dial code, name]. The shopper's
    own country is picked by default, or the United States if it is unknown. */
 const PHONE_CODES = [
@@ -121,8 +126,46 @@ const AUTH = {
     try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) { /* not loaded */ }
   }
 };
+/* Account IDs are always unique. Phone accounts get the last 6 digits of the
+   number + the first name (like 810521aman); if that is taken, -2, -3 ... is added. */
+const freeId = (base, users = AUTH.users()) => {
+  let id = base;
+  for (let i = 2; users.some(u => u.id === id); i++) id = base + "-" + i;
+  return id;
+};
+const newId = () => freeId("u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
+const phoneIdBase = (phone, first) => phone.replace(/\D/g, "").slice(-6) + first.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+const phoneId = (phone, first) => freeId(phoneIdBase(phone, first));
+
+/* Phone accounts made before this rule get the new ID once. Their cart, wish
+   list, orders and sign-in session move with them. */
+(function movePhoneIds() {
+  const users = AUTH.users();
+  let changed = false;
+  users.forEach(u => {
+    if (!u.phone || !u.first) return;
+    const base = phoneIdBase(u.phone, u.first);
+    if (u.id === base || u.id.startsWith(base + "-")) return;
+    const old = u.id, id = freeId(base, users);
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith(`bz:${old}:`)).forEach(k => {
+        localStorage.setItem(`bz:${id}:` + k.slice(old.length + 4), localStorage.getItem(k));
+        localStorage.removeItem(k);
+      });
+      for (const s of [sessionStorage, localStorage]) {
+        const v = JSON.parse(s.getItem("bz:session") || "null");
+        if (v && v.id === old) s.setItem("bz:session", JSON.stringify({ id }));
+      }
+      const mine = JSON.parse(localStorage.getItem("bz:mine") || "[]");
+      if (mine.some(p => p.owner === old)) localStorage.setItem("bz:mine", JSON.stringify(mine.map(p => (p.owner === old ? { ...p, owner: id } : p))));
+    } catch (e) { return; /* storage blocked: keep the old ID */ }
+    u.id = id; changed = true;
+  });
+  if (changed) AUTH.saveUsers(users);
+})();
+
 const USER = (() => { const s = AUTH.session(); return s ? AUTH.users().find(u => u.id === s.id) || null : null; })();
-const newId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const IS_OWNER = !!(USER && USER.email && OWNER_EMAILS.includes(USER.email));
 
 /* The password is mixed with a random "salt" and hashed, so it is not stored as plain text */
 async function hashPass(pass, salt) {
@@ -136,8 +179,28 @@ async function hashPass(pass, salt) {
   return "f" + (h >>> 0).toString(16);
 }
 const cleanEmail = s => s.trim().toLowerCase();
+/* "name@gmmail.com" -> "name@gmail.com": a popular domain that is 1-2 letters off */
+const MAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "live.com", "aol.com", "proton.me", "protonmail.com", "yahoo.co.jp", "yandex.com", "mail.com"];
+function mailTypo(mail) {
+  const at = mail.lastIndexOf("@"), d = mail.slice(at + 1);
+  if (MAIL_DOMAINS.includes(d)) return "";
+  const dist = (a, b) => {
+    let row = [...Array(b.length + 1).keys()];
+    for (let i = 1; i <= a.length; i++) {
+      const next = [i];
+      for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      row = next;
+    }
+    return row[b.length];
+  };
+  const best = MAIL_DOMAINS.map(x => [x, dist(d, x)]).sort((a, b) => a[1] - b[1])[0];
+  return best[1] <= 2 ? mail.slice(0, at + 1) + best[0] : "";
+}
 const okEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 const cleanPhone = s => s.replace(/[^\d]/g, "").replace(/^0+/, "");
+/* set a new password on an account (also used by "Change password" on the profile page) */
+const saltPass = async (user, pass) => { user.salt = Math.random().toString(36).slice(2) + Date.now().toString(36); user.hash = await hashPass(pass, user.salt); user.passSet = new Date().toISOString(); };
+const passError = (pass, again) => pass.length < 6 ? "Use 6 or more characters for your password." : pass !== again ? "Those passwords didn't match. Try again." : "";
 
 /* Google sends back a signed token. We read the name, email and photo from it.
    (A real store would also check the token on its own server.) */
@@ -161,7 +224,7 @@ function showLogin() {
   gate.id = "gate";
   gate.innerHTML = `<div class="g-wrap">
     <aside class="g-hero" aria-hidden="true">
-      <div class="g-logo">${LOGO}<span>bazaarly</span></div>
+      <div class="g-logo">${LOGO}<span>shopnest</span></div>
       <h2>Your whole market, one sign-in away.</h2>
       <ul><li>Your own cart, wish list and orders</li><li>Sell your items with just a photo</li><li>Free delivery on orders over $35</li></ul>
       <p class="g-small">Demo store. No real payments.</p>
@@ -194,47 +257,56 @@ function showLogin() {
     </div>`;
 
   const steps = {
-    email: () => `${top("Sign in", "to continue to Bazaarly")}${choices()}
+    email: () => `${top("Sign in", "to continue to ShopNest")}${choices()}
       ${field("g_email", "Email", "email", `autocomplete="username" value="${e(email)}"`)}
+      <p class="g-hint">No password? We'll email you a 6-digit code. New email? We'll make your account.</p>
       ${errBox}
-      <div class="g-row"><button type="button" class="g-link" data-g="create">Create account</button><button class="btn brand g-next">Next</button></div>`,
-    phone: () => `${top("Sign in", "to continue to Bazaarly")}${choices()}
-      <div class="g-phone"><label class="sr" for="g_cc">Country code</label><select id="g_cc">${PHONE_CODES.map(([iso, c, n]) => `<option value="${iso}" ${iso === country ? "selected" : ""}>${c} ${e(n)}</option>`).join("")}</select>
-      ${field("g_phone", "Phone number", "tel", `autocomplete="tel-national" inputmode="tel" value="${e(phone)}"`)}</div>
+      <div class="g-row"><button type="button" class="g-link" data-g="create">Create account with password</button><button class="btn brand g-next">Next</button></div>`,
+    phone: () => `${top("Sign in", "to continue to ShopNest")}${choices()}
+      <div class="g-phone"><button type="button" class="g-cc" id="g_cc" data-g="ccToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="g_ccPop">${ccLabel()}</button>
+      ${field("g_phone", "Phone number", "tel", `autocomplete="tel-national" inputmode="tel" value="${e(phone)}"`)}
+        <div class="g-cc-pop" id="g_ccPop" hidden>
+          <label class="sr" for="g_ccFind">Search countries</label>
+          <input id="g_ccFind" type="search" placeholder="Search country or code" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="g_ccList" aria-autocomplete="list">
+          <ul id="g_ccList" role="listbox" aria-label="Countries"></ul>
+        </div></div>
       <p class="g-hint">We'll send a 6-digit code to sign you in. New number? We'll make your account.</p>
       ${errBox}
       <div class="g-row"><span></span><button class="btn brand g-next">Send code</button></div>`,
-    code: () => `${top("Enter the code", `Sent to <b>${e(cc + " " + phone)}</b>`)}
-      <div class="g-sms" role="note"><b>Demo text message</b><span>Your Bazaarly code is <b class="mono">${sms.code}</b></span><small>This practice store can't send real texts, so the code is shown here.</small></div>
+    code: () => `${top("Enter the code", `Sent to <b>${e(tab === "phone" ? cc + " " + phone : email)}</b>`)}
+      <div class="g-sms" role="note"><b>Demo ${tab === "phone" ? "text message" : "email"}</b><span>Your ShopNest code is <b class="mono">${sms.code}</b></span><small>This practice store can't send real ${tab === "phone" ? "texts" : "email"}, so the code is shown here.</small></div>
       ${field("g_code", "6-digit code", "text", 'inputmode="numeric" autocomplete="one-time-code" maxlength="6"')}
       ${keep}
       ${errBox}
       <div class="g-row"><button type="button" class="g-link" data-g="resend">Send a new code</button><button class="btn brand g-next">Verify</button></div>
-      <button type="button" class="g-link g-back" data-g="tab" data-t="phone">← Use a different number</button>`,
-    phoneName: () => `${top("Welcome to Bazaarly", "What should we call you?")}
+      <button type="button" class="g-link g-back" data-g="tab" data-t="${tab}">← Use a different ${tab === "phone" ? "number" : "email"}</button>`,
+    phoneName: () => `${top("Welcome to ShopNest", "What should we call you?")}
       <div class="g-two">${field("g_first", "First name", "text", 'autocomplete="given-name"')}${field("g_last", "Last name (optional)", "text", 'autocomplete="family-name"')}</div>
       ${errBox}
       <div class="g-row"><span></span><button class="btn brand g-next">Finish</button></div>`,
     pass: () => `${top(`Hi ${e(found.first)}`)}
-      <button type="button" class="g-chip" data-g="back"><span class="g-ava">${e(found.first[0].toUpperCase())}</span>${e(found.email)} <span aria-hidden="true">▾</span><span class="sr">Use another account</span></button>
+      <button type="button" class="g-chip" data-g="back"><span class="g-ava">${e(found.first[0].toUpperCase())}</span>${e(tab === "phone" ? found.phone : found.email)} <span aria-hidden="true">▾</span><span class="sr">Use another account</span></button>
       ${field("g_pass", "Enter your password", "password", 'autocomplete="current-password"')}
       ${showPass}${keep}${errBox}
-      <div class="g-row"><button type="button" class="g-link" data-g="forgot">Forgot password?</button><button class="btn brand g-next">Next</button></div>`,
+      <div class="g-row">${tab === "email"
+        ? `<button type="button" class="g-link" data-g="forgot">Forgot password?</button>`
+        : `<button type="button" class="g-link" data-g="resend">Forgot password? Use a code</button>`}<button class="btn brand g-next">Next</button></div>
+      ${tab === "email" ? `<button type="button" class="g-link g-back" data-g="resend">Email me a sign-in code instead</button>` : ""}`,
     reset: () => `${top("Reset your password", `We sent a code to <b>${e(found.email)}</b>`)}
-      <div class="g-sms" role="note"><b>Demo email</b><span>Your Bazaarly reset code is <b class="mono">${mail.code}</b></span><small>This practice store can't send real email, so the code is shown here.</small></div>
+      <div class="g-sms" role="note"><b>Demo email</b><span>Your ShopNest reset code is <b class="mono">${mail.code}</b></span><small>This practice store can't send real email, so the code is shown here.</small></div>
       ${field("g_code", "6-digit code", "text", 'inputmode="numeric" autocomplete="one-time-code" maxlength="6"')}
       <div class="g-two">${field("g_pass", "New password", "password", 'autocomplete="new-password"')}${field("g_pass2", "Confirm", "password", 'autocomplete="new-password"')}</div>
       <p class="g-hint">Use 6 or more characters. Demo store: do not use a real password.</p>
       ${showPass}${keep}${errBox}
       <div class="g-row"><button type="button" class="g-link" data-g="forgot">Send a new code</button><button class="btn brand g-next">Reset password</button></div>
       <button type="button" class="g-link g-back" data-g="toPass">← Back to sign in</button>`,
-    social: () => `${top(`Continue with ${SOCIAL[net].name}`, "to sign in to Bazaarly")}
+    social: () => `${top(`Continue with ${SOCIAL[net].name}`, "to sign in to ShopNest")}
       <div class="g-sms" role="note"><b>Demo connection</b><span>This practice store isn't linked to a real ${SOCIAL[net].name} app, so enter the details your ${SOCIAL[net].name} account would share.</span></div>
       <div class="g-two">${field("g_first", "First name", "text", 'autocomplete="given-name"')}${field("g_last", "Last name (optional)", "text", 'autocomplete="family-name"')}</div>
       ${field("g_email", `${SOCIAL[net].name} email`, "email", 'autocomplete="email"')}
       ${keep}${errBox}
       <div class="g-row"><button type="button" class="g-link" data-g="back">Cancel</button><button class="btn brand g-next">Continue</button></div>`,
-    create: () => `${top("Create a Bazaarly account", "Enter your name, email and a password")}
+    create: () => `${top("Create a ShopNest account", "Enter your name, email and a password")}
       <div class="g-two">${field("g_first", "First name", "text", 'autocomplete="given-name"')}${field("g_last", "Last name (optional)", "text", 'autocomplete="family-name"')}</div>
       ${field("g_email", "Email", "email", `autocomplete="username" value="${e(email)}"`)}
       <div class="g-two">${field("g_pass", "Password", "password", 'autocomplete="new-password"')}${field("g_pass2", "Confirm", "password", 'autocomplete="new-password"')}</div>
@@ -245,7 +317,7 @@ function showLogin() {
 
   function render(s) {
     step = s;
-    host.innerHTML = `<form class="g-card" novalidate aria-label="${s === "create" ? "Create account" : "Sign in"}"><div class="g-logo g-logo-card">${LOGO}<span>bazaarly</span></div>${steps[s]()}</form>
+    host.innerHTML = `<form class="g-card" novalidate aria-label="${s === "create" ? "Create account" : "Sign in"}"><div class="g-logo g-logo-card">${LOGO}<span>shopnest</span></div>${steps[s]()}</form>
       <p class="g-foot">Accounts in this demo are saved only in this browser.</p>`;
     if (s === "email" || s === "phone") mountGoogle(host.querySelector("#g_google"));
     const first = host.querySelector("input:not([type=checkbox])");
@@ -296,24 +368,80 @@ function showLogin() {
     return "Wrong code. Check it and try again.";
   }
   function sendCode() { sms = newCode(); render("code"); }
-  const saltPass = async (user, pass) => { user.salt = Math.random().toString(36).slice(2) + Date.now().toString(36); user.hash = await hashPass(pass, user.salt); user.passSet = new Date().toISOString(); };
-  const passError = (pass, again) => pass.length < 6 ? "Use 6 or more characters for your password." : pass !== again ? "Those passwords didn't match. Try again." : "";
+  let warned = "";
+
+  /* ---------- Country picker with a search box (phone sign-in) ---------- */
+  function ccLabel() {
+    const [iso, c, n] = PHONE_CODES.find(([i]) => i === country);
+    return `<span class="sr">Country code: ${e(n)}</span><b aria-hidden="true">${c}</b><span class="g-cc-iso" aria-hidden="true">${iso}</span><span aria-hidden="true">▾</span>`;
+  }
+  let ccHits = [], ccAt = 0;
+  function ccFilter() {
+    const q = host.querySelector("#g_ccFind").value.trim().toLowerCase(), digits = q.replace(/[^\d]/g, "");
+    ccHits = !q ? PHONE_CODES : PHONE_CODES.filter(([iso, c, n]) =>
+      n.toLowerCase().includes(q) || iso.toLowerCase() === q || (digits && digits === q.replace(/^\+/, "") && c.slice(1).startsWith(digits)));
+    /* names that start with what was typed come first */
+    if (q) ccHits = [...ccHits].sort((a, b) => b[2].toLowerCase().startsWith(q) - a[2].toLowerCase().startsWith(q));
+    ccAt = Math.max(0, ccHits.findIndex(([iso]) => iso === country));
+    ccDraw();
+  }
+  function ccDraw() {
+    const list = host.querySelector("#g_ccList"), find = host.querySelector("#g_ccFind");
+    list.innerHTML = ccHits.length
+      ? ccHits.map(([iso, c, n], i) => `<li role="option" id="g_cc_${iso}" data-iso="${iso}" aria-selected="${i === ccAt}"><span>${e(n)}</span><b>${c}</b></li>`).join("")
+      : `<li class="g-cc-none">No country matches "${e(find.value)}"</li>`;
+    const on = ccHits[ccAt];
+    if (on) { find.setAttribute("aria-activedescendant", "g_cc_" + on[0]); list.querySelector(`#g_cc_${on[0]}`).scrollIntoView({ block: "nearest" }); }
+    else find.removeAttribute("aria-activedescendant");
+  }
+  function ccOpen() {
+    const pop = host.querySelector("#g_ccPop"), find = host.querySelector("#g_ccFind");
+    pop.hidden = false; host.querySelector("#g_cc").setAttribute("aria-expanded", "true");
+    find.value = ""; ccFilter(); find.focus();
+  }
+  function ccClose(focusBtn) {
+    const pop = host.querySelector("#g_ccPop");
+    if (!pop || pop.hidden) return;
+    pop.hidden = true; host.querySelector("#g_cc").setAttribute("aria-expanded", "false");
+    if (focusBtn) host.querySelector("#g_cc").focus();
+  }
+  function ccPick(iso) {
+    country = iso; cc = codeOf(iso);
+    host.querySelector("#g_cc").innerHTML = ccLabel();
+    ccClose(false); host.querySelector("#g_phone").focus();
+  }
+  gate.addEventListener("input", ev => { if (ev.target.id === "g_ccFind") ccFilter(); });
+  gate.addEventListener("keydown", ev => {
+    if (ev.target.id !== "g_ccFind") return;
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      ev.preventDefault();
+      if (ccHits.length) { ccAt = (ccAt + (ev.key === "ArrowDown" ? 1 : -1) + ccHits.length) % ccHits.length; ccDraw(); }
+    } else if (ev.key === "Enter") { ev.preventDefault(); if (ccHits[ccAt]) ccPick(ccHits[ccAt][0]); }
+    else if (ev.key === "Escape") { ev.preventDefault(); ccClose(true); }
+    else if (ev.key === "Tab") ccClose(false);
+  });
+  gate.addEventListener("click", ev => {
+    const opt = ev.target.closest("#g_ccList [data-iso]");
+    if (opt) return ccPick(opt.dataset.iso);
+    if (!ev.target.closest("#g_ccPop, #g_cc")) ccClose(false);
+  });
 
   gate.addEventListener("click", ev => {
     const b = ev.target.closest("[data-g]");
     if (!b) return;
     const g = b.dataset.g;
+    if (g === "ccToggle") { if (host.querySelector("#g_ccPop").hidden) ccOpen(); else ccClose(true); }
     if (g === "create") render("create");
-    if (g === "back") { found = null; tab = "email"; render("email"); }
+    if (g === "back") { found = null; if (tab !== "phone") tab = "email"; render(tab); }
     if (g === "tab") { tab = b.dataset.t; render(tab); }
     if (g === "resend") sendCode();
+    if (g === "fixmail") { email = b.dataset.m; const box = host.querySelector("#g_email"); box.value = email; err(""); host.querySelector(".g-next").focus(); }
     if (g === "forgot") { mail = newCode(); render("reset"); }
     if (g === "toPass") render("pass");
     if (g === "social") { net = b.dataset.n; render("social"); }
   });
   gate.addEventListener("change", ev => {
     if (ev.target.dataset.g === "show") host.querySelectorAll("#g_pass, #g_pass2").forEach(i => { i.type = ev.target.checked ? "text" : "password"; });
-    if (ev.target.id === "g_cc") { country = ev.target.value; cc = codeOf(country); }
   });
   gate.addEventListener("submit", async ev => {
     ev.preventDefault();
@@ -321,12 +449,15 @@ function showLogin() {
       email = cleanEmail(v("g_email"));
       if (!okEmail(email)) return err("Enter a valid email, like name@example.com.");
       found = AUTH.users().find(u => u.email === email);
-      if (!found) return err("Couldn't find a Bazaarly account with that email. Check it, or create an account.");
-      if (!found.hash) {
-        const via = [found.google && "Google", ...Object.keys(found.social || {}).map(k => SOCIAL[k] && SOCIAL[k].name)].filter(Boolean);
-        return err(`This account signs in with ${via.join(" or ") || "a phone number"}. Use that option above.`);
+      /* new email with a likely typo (gmmail.com): ask once before sending a code */
+      const fix = !found && mailTypo(email);
+      if (fix && warned !== email) {
+        warned = email;
+        host.querySelector("#g_err").innerHTML = `Did you mean <b>${e(fix)}</b>? <button type="button" class="g-link" data-g="fixmail" data-m="${e(fix)}">Use it</button> Or press Next again to keep what you typed.`;
+        return;
       }
-      render("pass");
+      /* an account with a password signs in with it; otherwise a code is emailed */
+      if (found && found.hash) render("pass"); else sendCode();
     } else if (step === "reset") {
       const pass = v("g_pass"), bad = codeError(mail, v("g_code")) || passError(pass, v("g_pass2"));
       if (bad) return err(bad);
@@ -339,7 +470,7 @@ function showLogin() {
       if (!okEmail(mailTo)) return err("Enter a valid email, like name@example.com.");
       let user = users.find(u => u.social && u.social[net] === mailTo);
       if (!user) {
-        if (users.some(u => u.email === mailTo)) return err("That email already has a Bazaarly account. Sign in with it the usual way.");
+        if (users.some(u => u.email === mailTo)) return err("That email already has a ShopNest account. Sign in with it the usual way.");
         user = { id: newId(), first, last: v("g_last").trim(), email: mailTo, social: { [net]: mailTo }, created: new Date().toISOString() };
         if (!AUTH.put(user)) return err("Your browser is blocking storage, so an account can't be saved here.");
       }
@@ -348,14 +479,22 @@ function showLogin() {
       const pass = v("g_pass");
       if (!pass) return err("Enter your password.");
       if (await hashPass(pass, found.salt) !== found.hash) return err("Wrong password. Try again.");
-      enter(found, kept(), "Email and password");
+      enter(found, kept(), tab === "phone" ? "Phone and password" : "Email and password");
     } else if (step === "phone") {
       phone = cleanPhone(v("g_phone"));
       if (phone.length < 6 || phone.length > 14) return err("Enter a valid phone number (6 to 14 digits).");
-      sendCode();
+      /* a phone account with a password signs in with it; otherwise a code is sent */
+      found = AUTH.users().find(u => u.phone === cc + phone && u.hash);
+      if (found) render("pass"); else sendCode();
     } else if (step === "code") {
       const bad = codeError(sms, v("g_code"));
       if (bad) return err(bad);
+      if (tab === "email") {
+        found = AUTH.users().find(u => u.email === email);
+        if (found) return enter(found, kept(), "Email code");
+        pending = { email, remember: kept() };
+        return render("phoneName");
+      }
       const full = cc + phone;
       found = AUTH.users().find(u => u.phone === full);
       if (found) return enter(found, kept(), "Phone code");
@@ -364,9 +503,12 @@ function showLogin() {
     } else if (step === "phoneName") {
       const first = v("g_first").trim();
       if (!first) return err("Enter your first name.");
-      const user = { id: newId(), first, last: v("g_last").trim(), phone: pending.phone, created: new Date().toISOString() };
+      const last = v("g_last").trim(), created = new Date().toISOString();
+      const user = pending.phone
+        ? { id: phoneId(pending.phone, first), first, last, phone: pending.phone, created }
+        : { id: newId(), first, last, email: pending.email, created };
       if (!AUTH.put(user)) return err("Your browser is blocking storage, so an account can't be saved here.");
-      enter(user, pending.remember, "Phone code");
+      enter(user, pending.remember, pending.phone ? "Phone code" : "Email code");
     } else {
       const first = v("g_first").trim(), last = v("g_last").trim(), pass = v("g_pass");
       email = cleanEmail(v("g_email"));

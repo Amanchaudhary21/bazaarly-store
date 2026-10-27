@@ -40,8 +40,10 @@ function saveMine() {
   const mine = P.filter(p => p.mine);
   try { localStorage.setItem("bz:mine", JSON.stringify(mine)); return true; } catch (e) { return false; }
 }
-/* Items for sale are shared by everyone on this browser; only the account that added one can remove it */
-const isMine = p => p.mine && (!p.owner || p.owner === USER.id);
+/* Only the store owner (OWNER_EMAILS in auth.js) can add or remove items.
+   isMine = items the owner added; the owner can also delete any store product. */
+const isMine = p => p.mine && IS_OWNER;
+const saveRemoved = () => { try { localStorage.setItem("bz:removed", JSON.stringify(REMOVED)); } catch (e) { /* blocked */ } };
 function unlist(id) {
   const i = P.findIndex(p => p.id === id);
   if (i >= 0) P.splice(i, 1);
@@ -56,7 +58,8 @@ function sellField(id, label, attrs, hint) {
   return `<div class="field"><label for="sl_${id}">${label}</label><input id="sl_${id}" name="${id}" autocomplete="off" aria-describedby="slerr_${id}" ${attrs}>${hint ? `<span class="muted" style="font-size:.82rem">${hint}</span>` : ""}<div class="err" id="slerr_${id}"></div></div>`;
 }
 
-VIEWS.sell = () => {
+VIEWS.sell = (r = {}) => {
+  if (!IS_OWNER) return { html: `<h1 class="sr" id="sellTitle" tabindex="-1">Sell an item</h1>${emptyState("Only the store owner can add items", "You can still shop everything in the store.", "#/", "Start shopping")}` };
   sellPhoto = "";
   const mine = P.filter(isMine);
   return {
@@ -72,10 +75,10 @@ VIEWS.sell = () => {
       </section>
       <section class="panel stack" aria-labelledby="h-info"><h2 id="h-info" style="${H2S}">2. Details</h2>
         <div class="form-grid">
-          <div class="wide">${sellField("title", "Item name", 'type="text" maxlength="90"')}</div>
+          <div class="wide">${sellField("title", "Item name", `type="text" maxlength="90" value="${esc(r.title || "")}"`)}</div>
           ${sellField("price", "Price ($)", 'type="number" min="0.01" step="0.01" inputmode="decimal"')}
           ${sellField("was", "Old price ($)", 'type="number" min="0" step="0.01" inputmode="decimal"', "Optional. Shows a sale badge.")}
-          <div class="field"><label for="sl_cat">Department</label><select id="sl_cat" name="cat">${CATS.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div>
+          <div class="field"><label for="sl_cat">Department</label><select id="sl_cat" name="cat">${CATS.map(c => `<option value="${c.id}" ${c.id === r.cat ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></div>
           ${sellField("stock", "How many in stock", 'type="number" min="0" step="1" value="10" inputmode="numeric"')}
           <div class="field wide"><label for="sl_about">About this item</label><textarea id="sl_about" name="about" maxlength="600" placeholder="One point per line"></textarea></div>
         </div>
@@ -86,6 +89,11 @@ VIEWS.sell = () => {
     <section class="sec" aria-labelledby="h-mine"><div class="sec-head"><h2 id="h-mine">Your items (${mine.length})</h2></div>
       ${mine.length ? `<div class="grid">${mine.map(card).join("")}</div>`
         : `<p class="muted">You have not added any items yet.</p>`}
+    </section>
+    <section class="sec panel row" aria-labelledby="h-removed" style="justify-content:space-between">
+      <div><h2 id="h-removed" style="${H2S}">Deleted store products (${REMOVED.length})</h2>
+      <p class="muted" style="font-size:.88rem">As the owner you can delete any product with its "Delete item" button.</p></div>
+      ${REMOVED.length ? `<button class="btn" type="button" data-act="restoreall">Restore all</button>` : ""}
     </section>`
   };
 };
@@ -106,6 +114,7 @@ CHG.photo = el => {
 };
 
 FORM.sellForm = () => {
+  if (!IS_OWNER) return;
   let first = null;
   const bad = (el, errEl, msg) => {
     const ok = !msg;
@@ -139,8 +148,14 @@ FORM.sellForm = () => {
 
 ACT.unsell = el => {
   const id = Number(el.dataset.id), p = PM.get(id);
-  if (!p || !isMine(p) || !confirm(`Delete "${p.title}" from the shop?\n\nIt will also be removed from carts and wish lists.`)) return;
-  unlist(id); saveMine();
-  if (route.name === "product") go("/sell"); else rerender();
+  if (!p || !IS_OWNER || !confirm(`Delete "${p.title}" from the shop?\n\nIt will also be removed from carts and wish lists.`)) return;
+  unlist(id);
+  if (p.mine) saveMine(); else { REMOVED.push(id); saveRemoved(); }
+  if (route.name === "product") go(p.mine ? "/sell" : "/"); else rerender();
   toast(`"${p.title}" was deleted`);
+};
+ACT.restoreall = () => {
+  if (!IS_OWNER || !confirm(`Bring back ${REMOVED.length} deleted store product${REMOVED.length === 1 ? "" : "s"}?`)) return;
+  REMOVED = []; saveRemoved();
+  location.reload();
 };

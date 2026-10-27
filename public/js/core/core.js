@@ -94,7 +94,7 @@ function card(p) {
     <div class="price-row"><span class="price">${money(p.price)}</span>${p.was ? `<span class="was">${money(p.was)}</span>` : ""}${d && (out || d < 20) ? `<span class="off">-${d}%</span>` : ""}</div>
     ${out ? `<span class="stock-out">Currently unavailable</span>` : p.price >= FREE_SHIP_MIN ? `<span class="ship">Free delivery</span>` : `<span class="muted" style="font-size:.8rem">Free delivery over ${money(FREE_SHIP_MIN)}</span>`}
     <button class="btn brand small" type="button" data-act="add" data-id="${p.id}" ${out ? "disabled" : ""}>${out ? "Unavailable" : "Add to cart"}</button>
-    ${p.mine && isMine(p) ? `<button class="btn danger small" type="button" data-act="unsell" data-id="${p.id}" aria-label="Delete ${esc(p.title)}">Delete item</button>` : ""}
+    ${IS_OWNER ? `<button class="btn danger small" type="button" data-act="unsell" data-id="${p.id}" aria-label="Delete ${esc(p.title)}">Delete item</button>` : ""}
   </article>`;
 }
 const emptyState = (title, text, link, label) => `<div class="empty"><svg aria-hidden="true" style="fill:none"><use href="#i-bag"/></svg><h2>${esc(title)}</h2><p class="muted">${esc(text)}</p><a class="btn primary" href="${link}">${esc(label)}</a></div>`;
@@ -146,7 +146,8 @@ function parse(path) {
   if (a === "c" && b) return { name: "list", mode: "cat", cat: b };
   if (a === "s") return { name: "list", mode: "search", q: b || "", cat: q.get("cat") || "" };
   if (a === "p" && b) return { name: "product", id: Number(b) };
-  if (["cart", "checkout", "orders", "wishlist", "sell", "account"].includes(a)) return { name: a };
+  if (a === "sell") return { name: "sell", title: q.get("name") || "", cat: q.get("cat") || "" };
+  if (["cart", "checkout", "orders", "wishlist", "account"].includes(a)) return { name: a };
   if (a === "done" && b) return { name: "done", id: b };
   return { name: "home" };
 }

@@ -1,7 +1,7 @@
 {
   "name": "bazaarly-store",
   "version": "1.0.0",
-  "description": "Bazaarly Market - a practice online store in HTML, CSS and JavaScript",
+  "description": "ShopNest - a practice online store in HTML, CSS and JavaScript",
   "private": true,
   "scripts": {
     "start": "node server.js"

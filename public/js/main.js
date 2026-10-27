@@ -116,6 +116,7 @@ document.addEventListener("change", e => { const el = e.target.closest("[data-ch
 document.addEventListener("input", e => { const el = e.target; if (el.id && el.id.startsWith("co_")) CO[el.id.slice(3)] = el.value; });
 document.addEventListener("submit", e => { const f = e.target; if (f.id && FORM[f.id]) { e.preventDefault(); FORM[f.id](f, e); } });
 window.addEventListener("popstate", () => {
+  if (!USER) return; // the sign-in screen is showing
   const h = location.hash;
   if (h.startsWith("#/")) { show(h.slice(1), false); syncSearch(); }
   else if (!h || h === "#") { show("/", false); syncSearch(); }
@@ -135,6 +136,7 @@ $("#resetBtn").addEventListener("click", () => {
 /* signed-in shopper: account menu in the header, and checkout starts with their name and email */
 if (USER) {
   CO.name = fullName(USER); CO.email = USER.email || "";
+  if (!IS_OWNER) $('.icon-btn[href="#/sell"]').remove();
   mountAccountMenu();
 }
 

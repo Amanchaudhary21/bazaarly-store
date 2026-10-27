@@ -1,4 +1,4 @@
-# Bazaarly Market
+# ShopNest
 
 A practice online store made with plain HTML, CSS and JavaScript (no frameworks).
 Search, filters, cart, coupons, checkout, orders, a wish list, selling your own items
@@ -64,7 +64,7 @@ Each file uses things made by the files above it.
 
 Edit, save with Ctrl+S, then press F5 in the browser.
 
-- `public/index.html`: find `<span>bazaarly</span>` and type your own shop name.
+- `public/index.html`: find `<span>shopnest</span>` and type your own shop name.
 - `public/js/core/data.js`: find `const FREE_SHIP_MIN` and change `SHIP_STD = 4.99` to `SHIP_STD = 2.99`.
   Standard delivery now costs $2.99.
 - `public/js/core/data.js`: change the words of any product title. It changes everywhere.

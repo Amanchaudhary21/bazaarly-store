@@ -56,7 +56,7 @@ VIEWS.product = r => {
         <button class="btn brand block" type="button" data-act="addpdp" ${out ? "disabled" : ""}>${out ? "Currently unavailable" : "Add to cart"}</button>
         <button class="btn primary block" type="button" data-act="buynow" ${out ? "disabled" : ""}>Buy now</button>
         <button class="btn block" type="button" data-act="wish" data-id="${p.id}" aria-pressed="${wished}">${wished ? "Remove from wish list" : "Add to wish list"}</button>
-        ${isMine(p) ? `<button class="btn danger block" type="button" data-act="unsell" data-id="${p.id}">Delete this item</button>` : ""}
+        ${IS_OWNER ? `<button class="btn danger block" type="button" data-act="unsell" data-id="${p.id}">Delete this item</button>` : ""}
         <p class="muted" style="font-size:.82rem">Demo checkout: no payment is taken and nothing ships.</p>
       </aside>
     </div>

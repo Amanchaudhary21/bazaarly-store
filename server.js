@@ -16,4 +16,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": (TYPES[path.extname(full)] || "application/octet-stream") + "; charset=utf-8", "Cache-Control": "no-store" });
     res.end(data);
   });
-}).listen(PORT, "127.0.0.1", () => console.log(`Bazaarly is running at http://localhost:${PORT}  (close this window to stop)`));
+}).listen(PORT, "127.0.0.1", () => console.log(`ShopNest is running at http://localhost:${PORT}  (close this window to stop)`));

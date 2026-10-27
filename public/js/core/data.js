@@ -5,7 +5,7 @@
    ================================================================== */
 
 /* ---------- Store settings and sample catalog (edit freely) ---------- */
-const BRAND = "Bazaarly";
+const BRAND = "ShopNest";
 const FREE_SHIP_MIN = 35, SHIP_STD = 4.99, SHIP_EXP = 12.99;
 const COUPONS = {
   WELCOME10: { kind: "pct", value: 10, label: "10% off your items" },
@@ -161,6 +161,10 @@ P.push(
 );
 /* Items you added yourself on the "Sell an item" page (saved in this browser, see js/pages/sell.js) */
 try { (JSON.parse(localStorage.getItem("bz:mine")) || []).forEach(p => { if (p && p.id && p.photo) P.push(p); }); } catch (e) { /* blocked */ }
+/* Store products the owner deleted (saved in this browser, see js/pages/sell.js) */
+let REMOVED = [];
+try { REMOVED = (JSON.parse(localStorage.getItem("bz:removed")) || []).filter(Number.isFinite); } catch (e) { /* blocked */ }
+for (let i = P.length - 1; i >= 0; i--) if (REMOVED.includes(P[i].id)) P.splice(i, 1);
 const PM = new Map(P.map(p => [p.id, p]));
 const HERO = [
   { id: "audio", h: "Sound that goes where you go", t: "Headphones and speakers, with deals on the most loved models.", cta: "Shop audio", to: "#/c/electronics", art: [1, 0], bg: "var(--brand-2)", ink: "var(--on-brand)" },
