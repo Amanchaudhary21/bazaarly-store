@@ -13,6 +13,38 @@ with a photo, and sign-in with email, phone number or Google.
 Every push to the `main` branch publishes the `public/` folder again
 (see `.github/workflows/deploy.yml`). It takes about a minute.
 
+## Install it as an app
+
+ShopNest is a Progressive Web App (PWA): `public/manifest.webmanifest` gives it a name and icons,
+and `public/sw.js` saves its files so it also opens with no internet.
+
+- **Windows (Edge or Chrome):** open the live site, then click the install icon in the address bar
+  (or menu **Apps > Install ShopNest**). It gets its own window, Start menu entry and taskbar icon.
+- **Android:** Chrome menu **Add to Home screen / Install app**.
+- **iPhone:** Safari **Share > Add to Home Screen**.
+
+## Publish it in the Microsoft Store
+
+The Store version is made from the live site with Microsoft's free tool **PWABuilder**,
+so every push to `main` also updates the Store app (no new upload needed for normal changes).
+
+1. **Partner Center account:** sign up at <https://partner.microsoft.com/dashboard/registration>
+   (individual developer account).
+2. **Reserve the name:** Partner Center > Apps and games > **New product > MSIX or PWA app** >
+   reserve a name, e.g. *ShopNest Demo Store*.
+3. Open the new app > **Product management > Product identity**. Copy **Package/Identity/Name**,
+   **Package/Identity/Publisher** and **Package/Properties/PublisherDisplayName**.
+4. Go to <https://www.pwabuilder.com>, enter `https://amanchaudhary21.github.io/shopnest-store/`,
+   click **Package For Stores > Windows > Generate Package**, and paste the three values from step 3.
+5. Unzip the download. Back in Partner Center, **Start your submission**:
+   - **Packages:** upload the `.msixbundle` (and the `.classic.appxbundle` if one was made)
+   - **Properties:** category *Shopping*; privacy policy URL
+     `https://amanchaudhary21.github.io/shopnest-store/privacy.html`
+   - **Age ratings:** answer the questionnaire
+   - **Store listings:** description and at least one screenshot
+     (say it is a demo store with no real purchases)
+6. **Submit to the Store.** Certification usually takes a few days.
+
 ## How to run it
 
 **Easiest:** double-click `public/index.html`. It opens in your browser. No internet needed

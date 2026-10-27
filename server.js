@@ -4,7 +4,7 @@
    Then open http://localhost:8080  (Google sign-in needs this address). */
 const http = require("http"), fs = require("fs"), path = require("path");
 const PORT = 8080, ROOT = path.join(__dirname, "public");
-const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".txt": "text/plain" };
+const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".txt": "text/plain", ".webmanifest": "application/manifest+json", ".json": "application/json" };
 
 http.createServer((req, res) => {
   let file = decodeURIComponent(req.url.split("?")[0]);
