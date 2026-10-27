@@ -8,7 +8,7 @@ with a photo, and sign-in with email, phone number or Google.
 
 ## Live site
 
-**https://amanchaudhary21.github.io/bazaarly-store/**
+**https://amanchaudhary21.github.io/shopnest-store/**
 
 Every push to the `main` branch publishes the `public/` folder again
 (see `.github/workflows/deploy.yml`). It takes about a minute.
@@ -30,7 +30,7 @@ or double-click `start.bat`. The store opens at <http://localhost:8080>. You nee
 ## Project structure
 
 ```
-15bazaarly-store/
+15shopnest-store/
 ├── public/                  everything the browser loads
 │   ├── index.html           the page: header, menu, footer; loads the CSS and JS
 │   ├── css/
