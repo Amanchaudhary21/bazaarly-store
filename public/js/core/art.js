@@ -1,6 +1,6 @@
 /* ==================================================================
-   art.js - Draws the product pictures. They are small SVG drawings made by code,
-   so the project has no photo files.
+   art.js - Shows the product pictures: a real photo when the product has one (see PHOTOS in data.js),
+   otherwise a small SVG drawing made by code.
    (file 4 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 

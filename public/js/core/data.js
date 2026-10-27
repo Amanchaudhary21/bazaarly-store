@@ -159,6 +159,10 @@ P.push(
     ["Aged grains cook up long, fluffy and fragrant", "Naturally gluten free", "5 kg family bag"],
     [["Weight", "5 kg"], ["Grain", "Long"], ["Origin", "Sample"]], "staple pantry cooking food", 85)
 );
+/* Real product photos, saved as img/products/<id>.jpg (sources and licences: img/products/CREDITS.md).
+   Products not in this list keep their drawn picture from art.js. */
+const PHOTOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 17, 18, 19, 20, 21, 23, 24, 25, 26];
+P.forEach(p => { if (PHOTOS.includes(p.id)) p.photo = `img/products/${p.id}.jpg`; });
 /* Items you added yourself on the "Sell an item" page (saved in this browser, see js/pages/sell.js) */
 try { (JSON.parse(localStorage.getItem("bz:mine")) || []).forEach(p => { if (p && p.id && p.photo) P.push(p); }); } catch (e) { /* blocked */ }
 /* Store products the owner deleted. Everyone gets the published list (js/core/removed.js);
