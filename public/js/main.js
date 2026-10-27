@@ -1,7 +1,7 @@
 /* ==================================================================
    main.js - Starts the store: menus, search box, dark-mode button and click handling.
    This file must load last.
-   (file 10 of 10; the load order is at the bottom of index.html)
+   (file 11 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Start-up: menus, search, theme, page-wide events ---------- */
@@ -132,16 +132,10 @@ $("#resetBtn").addEventListener("click", () => {
   toast("Demo data reset");
 });
 
-/* signed-in shopper: account button in the header, and checkout starts with their name and email */
-const fullName = u => [u.first, u.last].filter(Boolean).join(" ");
+/* signed-in shopper: account menu in the header, and checkout starts with their name and email */
 if (USER) {
-  const login = USER.email || USER.phone;
   CO.name = fullName(USER); CO.email = USER.email || "";
-  $("#cartCount").parentElement.insertAdjacentHTML("afterend", `<button class="icon-btn avatar" id="userBtn" type="button" aria-label="Account: ${esc(fullName(USER))}. Sign out" title="${esc(fullName(USER))} (${esc(login)})">${USER.picture ? `<img src="${esc(USER.picture)}" alt="" referrerpolicy="no-referrer">` : esc(USER.first[0].toUpperCase())}</button>`);
-  $("#userBtn").addEventListener("click", () => {
-    if (!confirm(`Signed in as ${fullName(USER)} (${login}).\n\nSign out?`)) return;
-    AUTH.end(); location.hash = "#/"; location.reload();
-  });
+  mountAccountMenu();
 }
 
 /* go (only after sign-in; otherwise auth.js shows the sign-in screen) */

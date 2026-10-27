@@ -1,7 +1,7 @@
 /* ==================================================================
    art.js - Draws the product pictures. They are small SVG drawings made by code,
    so the project has no photo files.
-   (file 3 of 10; the load order is at the bottom of index.html)
+   (file 3 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Product art: small flat illustrations drawn in code ---------- */

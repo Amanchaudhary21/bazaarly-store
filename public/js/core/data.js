@@ -1,7 +1,7 @@
 /* ==================================================================
    data.js - The product list, categories, coupons and delivery prices.
    Edit this file to sell different things.
-   (file 1 of 10; the load order is at the bottom of index.html)
+   (file 1 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Store settings and sample catalog (edit freely) ---------- */

@@ -38,7 +38,7 @@ or double-click `start.bat`. The store opens at <http://localhost:8080>. You nee
 │   └── js/
 │       ├── core/            shared pieces, loaded first
 │       │   ├── data.js      products, categories, coupons, delivery prices
-│       │   ├── auth.js      sign-in screen: email, phone code, Google
+│       │   ├── auth.js      sign-in screen: email, phone code, Google, social, password reset
 │       │   ├── art.js       draws the product pictures (or shows your photo)
 │       │   └── core.js      helpers, saved cart and wish list, price maths, page switcher
 │       ├── pages/           one file per page
@@ -46,7 +46,8 @@ or double-click `start.bat`. The store opens at <http://localhost:8080>. You nee
 │       │   ├── product.js   single product page and reviews
 │       │   ├── cart.js      cart, coupon box, wish list
 │       │   ├── checkout.js  checkout form, order confirmation, Orders page
-│       │   └── sell.js      "Sell an item": add your own product with a photo
+│       │   ├── sell.js      "Sell an item": add your own product with a photo
+│       │   └── account.js   Account menu (avatar) and "Your profile" page
 │       └── main.js          starts the store: menus, search box, theme button, clicks
 ├── .github/workflows/
 │   └── deploy.yml           publishes public/ to GitHub Pages on every push

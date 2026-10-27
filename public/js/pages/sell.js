@@ -2,7 +2,7 @@
    sell.js - The "Sell an item" page: add your own product with a photo.
    Your products are saved in this browser (key bz:mine) and show up
    in the shop like every other product.
-   (file 9 of 10; the load order is at the bottom of index.html)
+   (file 9 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Sell an item ---------- */

@@ -1,6 +1,6 @@
 /* ==================================================================
    home.js - Home page, product lists, search results and filters.
-   (file 5 of 10; the load order is at the bottom of index.html)
+   (file 5 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Home ---------- */

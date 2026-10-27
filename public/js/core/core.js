@@ -1,6 +1,6 @@
 /* ==================================================================
    core.js - Helpers, the saved cart and wish list, price maths, and the page switcher (router).
-   (file 4 of 10; the load order is at the bottom of index.html)
+   (file 4 of 11; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Core: helpers, saved state, cart maths, router ---------- */
@@ -146,7 +146,7 @@ function parse(path) {
   if (a === "c" && b) return { name: "list", mode: "cat", cat: b };
   if (a === "s") return { name: "list", mode: "search", q: b || "", cat: q.get("cat") || "" };
   if (a === "p" && b) return { name: "product", id: Number(b) };
-  if (["cart", "checkout", "orders", "wishlist", "sell"].includes(a)) return { name: a };
+  if (["cart", "checkout", "orders", "wishlist", "sell", "account"].includes(a)) return { name: a };
   if (a === "done" && b) return { name: "done", id: b };
   return { name: "home" };
 }
