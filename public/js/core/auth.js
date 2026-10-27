@@ -4,7 +4,7 @@
    account gets its own cart, wish list and orders.
    DEMO ONLY: accounts are kept in this browser (key bz:users). This is
    not real security, so never use a real password here.
-   (file 2 of 11; the load order is at the bottom of index.html)
+   (file 3 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Google sign-in setup ----------

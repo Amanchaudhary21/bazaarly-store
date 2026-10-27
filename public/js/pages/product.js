@@ -1,6 +1,6 @@
 /* ==================================================================
    product.js - The single product page and customer reviews.
-   (file 6 of 11; the load order is at the bottom of index.html)
+   (file 7 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Product page ---------- */

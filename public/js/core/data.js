@@ -1,7 +1,7 @@
 /* ==================================================================
    data.js - The product list, categories, coupons and delivery prices.
    Edit this file to sell different things.
-   (file 1 of 11; the load order is at the bottom of index.html)
+   (file 2 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Store settings and sample catalog (edit freely) ---------- */
@@ -161,9 +161,19 @@ P.push(
 );
 /* Items you added yourself on the "Sell an item" page (saved in this browser, see js/pages/sell.js) */
 try { (JSON.parse(localStorage.getItem("bz:mine")) || []).forEach(p => { if (p && p.id && p.photo) P.push(p); }); } catch (e) { /* blocked */ }
-/* Store products the owner deleted (saved in this browser, see js/pages/sell.js) */
-let REMOVED = [];
-try { REMOVED = (JSON.parse(localStorage.getItem("bz:removed")) || []).filter(Number.isFinite); } catch (e) { /* blocked */ }
+/* Store products the owner deleted. Everyone gets the published list (js/core/removed.js);
+   the owner's browser keeps its own list (bz:removed) until it is published. See js/pages/sell.js */
+const sameIds = (a, b) => a.length === b.length && a.every(id => b.includes(id));
+const BASE_TITLES = Object.fromEntries(P.filter(p => !p.mine).map(p => [p.id, p.title]));
+let REMOVED = [...PUBLISHED_REMOVED];
+try {
+  const local = JSON.parse(localStorage.getItem("bz:removed"));
+  if (Array.isArray(local)) {
+    const ids = local.filter(Number.isFinite);
+    if (sameIds(ids, PUBLISHED_REMOVED)) localStorage.removeItem("bz:removed"); // published: follow the shared list again
+    else REMOVED = ids;
+  }
+} catch (e) { /* blocked */ }
 for (let i = P.length - 1; i >= 0; i--) if (REMOVED.includes(P[i].id)) P.splice(i, 1);
 const PM = new Map(P.map(p => [p.id, p]));
 const HERO = [

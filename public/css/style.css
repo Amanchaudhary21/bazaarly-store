@@ -543,3 +543,7 @@ html.locked body > :not(#gate):not(svg) { display: none !important; }
 .pf-now { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--tag); color: var(--on-tag); font-size: .75rem; font-weight: 700; }
 .pf-note { margin-top: 16px; font-size: .88rem; }
 @media (max-width: 480px) { .pf-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* owner: publish deletions for everyone (Sell page) */
+.pub-flag { display: inline-block; padding: 1px 10px; border-radius: 999px; background: var(--tag); color: var(--on-tag); font-size: .82rem; font-weight: 700; }
+.pub-steps { display: grid; gap: 4px; padding-left: 20px; font-size: .88rem; }

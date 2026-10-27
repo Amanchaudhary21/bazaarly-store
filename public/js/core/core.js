@@ -1,6 +1,6 @@
 /* ==================================================================
    core.js - Helpers, the saved cart and wish list, price maths, and the page switcher (router).
-   (file 4 of 11; the load order is at the bottom of index.html)
+   (file 5 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Core: helpers, saved state, cart maths, router ---------- */

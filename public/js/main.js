@@ -1,7 +1,7 @@
 /* ==================================================================
    main.js - Starts the store: menus, search box, dark-mode button and click handling.
    This file must load last.
-   (file 11 of 11; the load order is at the bottom of index.html)
+   (file 12 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Start-up: menus, search, theme, page-wide events ---------- */

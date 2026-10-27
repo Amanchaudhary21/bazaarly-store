@@ -1,6 +1,6 @@
 /* ==================================================================
    cart.js - Cart, coupon box and wish list.
-   (file 7 of 11; the load order is at the bottom of index.html)
+   (file 8 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 /* ---------- Cart, order summary, wish list ---------- */

@@ -1,7 +1,7 @@
 /* ==================================================================
    account.js - The account menu in the header (the round avatar) and
    the "Your profile" page with every detail of the signed-in account.
-   (file 10 of 11; the load order is at the bottom of index.html)
+   (file 11 of 12; the load order is at the bottom of index.html)
    ================================================================== */
 
 const fullName = u => [u.first, u.last].filter(Boolean).join(" ");
