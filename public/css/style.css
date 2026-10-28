@@ -577,3 +577,36 @@ html.locked body > :not(#gate):not(svg) { display: none !important; }
 /* owner: publish deletions for everyone (Sell page) */
 .pub-flag { display: inline-block; padding: 1px 10px; border-radius: 999px; background: var(--tag); color: var(--on-tag); font-size: .82rem; font-weight: 700; }
 .pub-steps { display: grid; gap: 4px; padding-left: 20px; font-size: .88rem; }
+
+/* checkout: payment methods (demo) */
+.pay-badge { flex: none; align-self: center; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; border: 1px solid var(--line); color: var(--muted); }
+.pay-badge.pay-paypay { background: #FF0033; border-color: #FF0033; color: #FFFFFF; }
+.pay-badge.pay-rakuten { background: #BF0000; border-color: #BF0000; color: #FFFFFF; }
+.pay-card { margin-top: 4px; }
+.qr-dialog { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 20px; border: 1px solid var(--line); border-top: 6px solid var(--btn); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.qr-dialog.pay-paypay { border-top-color: #FF0033; }
+.qr-dialog.pay-rakuten { border-top-color: #BF0000; }
+.qr-dialog::backdrop { background: rgb(0 0 0 / .55); }
+.qr-dialog > * + * { margin-top: 12px; }
+.qr-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.qr-head h2 { font-size: 1.15rem; }
+.qr-amount { font-size: 1.6rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+.qr-amount .muted { font-size: .9rem; font-weight: 500; }
+.qr-code { width: min(240px, 100%); aspect-ratio: 1; margin-inline: auto; display: grid; place-items: center; padding: 8px; background: #FFFFFF; border-radius: 8px; text-align: center; }
+.qr-code .muted { color: #44595C; }
+.qr-code svg { width: 100%; height: 100%; }
+.qr-code.expired svg { opacity: .15; }
+.qr-timer { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.qr-steps { padding-left: 20px; display: grid; gap: 2px; font-size: .92rem; }
+.pay-group { margin: 14px 0 6px; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pay-group:first-child { margin-top: 0; }
+.pay-badge.pay-dpay { background: #CC0033; border-color: #CC0033; color: #FFFFFF; }
+.pay-badge.pay-aupay { background: #EB5505; border-color: #EB5505; color: #FFFFFF; }
+.pay-badge.pay-merpay { background: #E5162A; border-color: #E5162A; color: #FFFFFF; }
+.qr-dialog.pay-dpay { border-top-color: #CC0033; }
+.qr-dialog.pay-aupay { border-top-color: #EB5505; }
+.qr-dialog.pay-merpay { border-top-color: #E5162A; }
+.pay-howto { width: min(520px, 100%); text-align: left; display: grid; gap: 6px; padding: 16px; border: 1px solid var(--line); border-left: 5px solid var(--tag); border-radius: 10px; background: var(--surface); }
+.pay-howto h2 { font-size: 1.05rem; margin-bottom: 4px; }
+.pay-howto .r { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 4px; border-bottom: 1px dashed var(--line); }
+.pay-howto .r b { overflow-wrap: anywhere; }
