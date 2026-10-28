@@ -137,3 +137,31 @@ and on `http://localhost:8080` are separate.
 Click the **+** button in the header to sell an item: choose a photo, add a name and price, and save.
 Your items have a red **Delete item** button on their card and a **Delete this item** button on
 their product page. Only you see these buttons.
+
+## Deleting products for everyone (shop server + MySQL)
+
+When the owner (amanecdy@gmail.com) deletes a store product, the `backend` server saves that in
+MySQL, and every shopper's store hides it within 30 seconds (straight away on their next visit).
+
+1. Make `backend/local.properties` (it is not uploaded to GitHub) with your MySQL password and an owner password:
+
+   ```properties
+   spring.datasource.password=your-mysql-root-password
+   app.owner-password=choose-a-long-password
+   ```
+
+2. Start the server (needs Java 25). The `shopnest` database is made on the first start:
+
+   ```bash
+   cd backend
+   mvnw spring-boot:run
+   ```
+
+   It runs at <http://localhost:8081>. Keep `start.bat` running too for the store itself (port 8080).
+3. Sign in to the store as the owner, open **Sell an item**, and enter the owner password under
+   **Deleted store products** to connect. Now **Delete item** removes a product for every shopper,
+   and **Restore all** brings them back.
+
+The store uses the server only when it is opened at `localhost`. To use it on the live site,
+host the backend online and put its address in `API_URL` at `public/js/core/data.js`
+(and add the site's address to `app.cors-origins`).

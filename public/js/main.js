@@ -140,9 +140,28 @@ if (USER) {
   mountAccountMenu();
 }
 
+/* Products the owner deleted on the shop server disappear here too: checked on load,
+   when the tab is shown again, and every 30 seconds. Restored products need a reload. */
+async function syncRemoved() {
+  let ids;
+  try { ids = (await api("/products/deleted")).filter(Number.isFinite); } catch (e) { return; /* server off: keep the last list */ }
+  if (sameIds(ids, REMOVED)) return;
+  const back = REMOVED.some(id => !ids.includes(id));
+  REMOVED = ids; saveSrvRemoved();
+  if (back) { location.reload(); return; }
+  const gone = ids.filter(id => PM.has(id));
+  gone.forEach(id => unlist(id));
+  if (gone.length) rerender();
+}
+
 /* go (only after sign-in; otherwise auth.js shows the sign-in screen) */
 if (USER) {
   updateCounts();
   show(location.hash.startsWith("#/") ? location.hash.slice(1) : "/", false);
   syncSearch();
+  if (API_URL) {
+    syncRemoved();
+    setInterval(syncRemoved, 30000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) syncRemoved(); });
+  }
 }

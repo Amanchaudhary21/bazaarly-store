@@ -163,14 +163,20 @@ P.push(
 P.forEach(p => { p.photo = `img/products/${p.id}.jpg`; });
 /* Items you added yourself on the "Sell an item" page (saved in this browser, see js/pages/sell.js) */
 try { (JSON.parse(localStorage.getItem("bz:mine")) || []).forEach(p => { if (p && p.id && p.photo) P.push(p); }); } catch (e) { /* blocked */ }
-/* Store products the owner deleted. Everyone gets the published list (js/core/removed.js);
-   the owner's browser keeps its own list (bz:removed) until it is published. See js/pages/sell.js */
+/* The shop server (backend folder: Spring Boot + MySQL). When it is set, products the owner
+   deletes there are hidden for every visitor. Put your hosted server's address here to use it
+   on the live site too. Empty = no server: deletions use the published removed.js list instead. */
+const API_URL = ["localhost", "127.0.0.1"].includes(location.hostname) ? "http://localhost:8081" : "";
+/* Store products the owner deleted. With a server: the last list it sent (bz:srvRemoved), checked
+   again as soon as the page loads (main.js). Without one: the published list (js/core/removed.js),
+   and the owner's browser keeps its own list (bz:removed) until it is published. See js/pages/sell.js */
 const sameIds = (a, b) => a.length === b.length && a.every(id => b.includes(id));
 const BASE_TITLES = Object.fromEntries(P.filter(p => !p.mine).map(p => [p.id, p.title]));
 let REMOVED = [...PUBLISHED_REMOVED];
 try {
-  const local = JSON.parse(localStorage.getItem("bz:removed"));
-  if (Array.isArray(local)) {
+  const local = JSON.parse(localStorage.getItem(API_URL ? "bz:srvRemoved" : "bz:removed"));
+  if (API_URL) REMOVED = Array.isArray(local) ? local.filter(Number.isFinite) : [];
+  else if (Array.isArray(local)) {
     const ids = local.filter(Number.isFinite);
     if (sameIds(ids, PUBLISHED_REMOVED)) localStorage.removeItem("bz:removed"); // published: follow the shared list again
     else REMOVED = ids;

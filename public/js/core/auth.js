@@ -280,9 +280,12 @@ function showLogin() {
       ${errBox}
       <div class="g-row"><button type="button" class="g-link" data-g="resend">Send a new code</button><button class="btn brand g-next">Verify</button></div>
       <button type="button" class="g-link g-back" data-g="tab" data-t="${tab}">← Use a different ${tab === "phone" ? "number" : "email"}</button>`,
-    phoneName: () => `${top("Welcome to ShopNest", "What should we call you?")}
-      <div class="g-two">${field("g_first", "First name", "text", 'autocomplete="given-name"')}${field("g_last", "Last name (optional)", "text", 'autocomplete="family-name"')}</div>
-      ${errBox}
+    phoneName: () => `${top(pending.user ? `Welcome back, ${e(pending.user.first)}` : "Welcome to ShopNest", pending.user ? "Add an email and password to finish your account" : "Set up your name, email and password")}
+      <div class="g-two">${field("g_first", "First name", "text", `autocomplete="given-name" value="${e(pending.user ? pending.user.first : "")}"`)}${field("g_last", "Last name (optional)", "text", `autocomplete="family-name" value="${e(pending.user ? pending.user.last : "")}"`)}</div>
+      ${field("g_email", "Email", "email", pending.email ? `autocomplete="username" value="${e(pending.email)}" readonly` : 'autocomplete="email"')}
+      <div class="g-two">${field("g_pass", "Password", "password", 'autocomplete="new-password"')}${field("g_pass2", "Confirm", "password", 'autocomplete="new-password"')}</div>
+      <p class="g-hint">Use 6 or more characters. Next time you can sign in with your email${pending.phone ? " or phone number" : ""} and this password. Demo store: do not use a real password.</p>
+      ${showPass}${errBox}
       <div class="g-row"><span></span><button class="btn brand g-next">Finish</button></div>`,
     pass: () => `${top(`Hi ${e(found.first)}`)}
       <button type="button" class="g-chip" data-g="back"><span class="g-ava">${e(found.first[0].toUpperCase())}</span>${e(tab === "phone" ? found.phone : found.email)} <span aria-hidden="true">▾</span><span class="sr">Use another account</span></button>
@@ -489,24 +492,32 @@ function showLogin() {
     } else if (step === "code") {
       const bad = codeError(sms, v("g_code"));
       if (bad) return err(bad);
+      /* an account made before passwords were asked for gets the same setup step once */
       if (tab === "email") {
         found = AUTH.users().find(u => u.email === email);
-        if (found) return enter(found, kept(), "Email code");
-        pending = { email, remember: kept() };
+        if (found && found.hash) return enter(found, kept(), "Email code");
+        pending = { user: found, email, remember: kept() };
         return render("phoneName");
       }
       const full = cc + phone;
       found = AUTH.users().find(u => u.phone === full);
-      if (found) return enter(found, kept(), "Phone code");
-      pending = { phone: full, remember: kept() };
+      if (found && found.hash) return enter(found, kept(), "Phone code");
+      pending = { user: found, email: found && found.email, phone: full, remember: kept() };
       render("phoneName");
     } else if (step === "phoneName") {
       const first = v("g_first").trim();
       if (!first) return err("Enter your first name.");
+      const mailTo = pending.email || cleanEmail(v("g_email")), pass = v("g_pass");
+      if (!okEmail(mailTo)) return err("Enter a valid email, like name@example.com.");
+      if (!pending.email && AUTH.users().some(u => u.email === mailTo && u.id !== (pending.user || {}).id)) return err("That email already has a ShopNest account. Use a different email.");
+      const bad = passError(pass, v("g_pass2"));
+      if (bad) return err(bad);
       const last = v("g_last").trim(), created = new Date().toISOString();
-      const user = pending.phone
-        ? { id: phoneId(pending.phone, first), first, last, phone: pending.phone, created }
-        : { id: newId(), first, last, email: pending.email, created };
+      const user = pending.user ? Object.assign(pending.user, { first, last, email: mailTo })
+        : pending.phone
+        ? { id: phoneId(pending.phone, first), first, last, phone: pending.phone, email: mailTo, created }
+        : { id: newId(), first, last, email: mailTo, created };
+      await saltPass(user, pass);
       if (!AUTH.put(user)) return err("Your browser is blocking storage, so an account can't be saved here.");
       enter(user, pending.remember, pending.phone ? "Phone code" : "Email code");
     } else {

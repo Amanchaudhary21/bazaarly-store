@@ -109,6 +109,22 @@ function toast(msg, link) {
   setTimeout(() => t.remove(), 4200);
 }
 
+/* ---------- shop server (API_URL in data.js) ----------
+   The owner's token comes from "Connect" on the Sell page and lets them delete for everyone. */
+const ownerToken = () => { try { return localStorage.getItem("bz:ownerToken") || ""; } catch (e) { return ""; } };
+async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" }, t = ownerToken();
+  if (t) headers.Authorization = "Bearer " + t;
+  const res = await fetch(API_URL + "/api" + path, { ...opts, headers });
+  if (!res.ok) throw Object.assign(new Error("Server error " + res.status), { status: res.status });
+  return res.json();
+}
+const saveSrvRemoved = () => { try { localStorage.setItem("bz:srvRemoved", JSON.stringify(REMOVED)); } catch (e) { /* blocked */ } };
+function serverError(e) {
+  if (e.status === 401) { try { localStorage.removeItem("bz:ownerToken"); } catch (x) { /* blocked */ } return "The shop server needs your owner password again (Sell page)."; }
+  return e.status ? `The shop server could not do that (error ${e.status}).` : "Can't reach the shop server. Is it running? (backend folder: mvnw spring-boot:run)";
+}
+
 /* Added to cart: a copy of the product photo flies into the cart icon, then the icon bounces with a tick */
 function flyToCart(from) {
   const cart = $('.icon-btn[href="#/cart"]');

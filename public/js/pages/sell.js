@@ -142,25 +142,67 @@ FORM.sellForm = () => {
   rerender("#sellTitle");
 };
 
-ACT.unsell = el => {
+/* With a shop server, store products are deleted there, so every shopper stops seeing them */
+const viaServer = p => API_URL && !p.mine;
+ACT.unsell = async el => {
   const id = Number(el.dataset.id), p = PM.get(id);
-  if (!p || !IS_OWNER || !confirm(`Delete "${p.title}" from the shop?\n\nIt will also be removed from carts and wish lists.`)) return;
+  if (!p || !IS_OWNER) return;
+  if (viaServer(p) && !ownerToken()) { go("/sell"); toast("Connect to the shop server first (owner password below), then delete the item again."); return; }
+  if (!confirm(`Delete "${p.title}" from the shop${viaServer(p) ? " for every shopper" : ""}?\n\nIt will also be removed from carts and wish lists.`)) return;
+  if (viaServer(p)) {
+    try { REMOVED = await api(`/products/${id}`, { method: "DELETE" }); } catch (e) { toast(serverError(e)); if (e.status === 401) rerender(); return; }
+    saveSrvRemoved();
+  }
   unlist(id);
-  if (p.mine) saveMine(); else { REMOVED.push(id); saveRemoved(); }
+  if (p.mine) saveMine(); else if (!API_URL) { REMOVED.push(id); saveRemoved(); }
   if (route.name === "product") go(p.mine ? "/sell" : "/"); else rerender();
-  toast(`"${p.title}" was deleted`);
+  toast(`"${p.title}" was deleted${viaServer(p) ? " for everyone" : ""}`);
 };
-ACT.restoreall = () => {
-  if (!IS_OWNER || !confirm(`Bring back ${REMOVED.length} deleted store product${REMOVED.length === 1 ? "" : "s"}?`)) return;
-  REMOVED = []; saveRemoved();
+ACT.restoreall = async () => {
+  if (!IS_OWNER || !confirm(`Bring back ${REMOVED.length} deleted store product${REMOVED.length === 1 ? "" : "s"}${API_URL ? " for every shopper" : ""}?`)) return;
+  if (API_URL) {
+    try { REMOVED = await api("/products/restore", { method: "POST" }); } catch (e) { toast(serverError(e)); if (e.status === 401) rerender(); return; }
+    saveSrvRemoved();
+  } else { REMOVED = []; saveRemoved(); }
   location.reload();
 };
+
+/* ---------- Connect to the shop server (owner only) ---------- */
+function serverPanel() {
+  const n = REMOVED.length, on = !!ownerToken();
+  return `<section class="sec panel stack" aria-labelledby="h-removed">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="h-removed" style="${H2S}">Deleted store products (${n})</h2>
+      ${n && on ? `<button class="btn small" type="button" data-act="restoreall">Restore all</button>` : ""}
+    </div>
+    <p class="muted" style="font-size:.88rem">Deleting a store product with its "Delete item" button hides it for every shopper. The list is kept in the shop server's MySQL database.</p>
+    ${on ? `<div class="row"><span><b>Connected</b> to the shop server as the owner.</span><button class="btn small" type="button" data-act="srvout">Disconnect</button></div>`
+      : `<form id="ownerForm" class="stack" novalidate>
+        <div class="field"><label for="ow_pass">Owner password for the shop server</label><input id="ow_pass" type="password" autocomplete="current-password" aria-describedby="ow_err">
+          <span class="muted" style="font-size:.82rem">Set in backend/local.properties (app.owner-password), or printed when the server starts.</span>
+          <div class="err" id="ow_err" role="alert"></div></div>
+        <div class="row"><button class="btn brand" type="submit">Connect</button></div>
+      </form>`}
+  </section>`;
+}
+FORM.ownerForm = async () => {
+  const pass = $("#ow_pass"), say = msg => { $("#ow_err").textContent = msg; pass.focus(); };
+  if (!pass.value) return say("Enter the owner password.");
+  try {
+    const r = await api("/owner/login", { method: "POST", body: JSON.stringify({ email: USER.email, password: pass.value }) });
+    localStorage.setItem("bz:ownerToken", r.token);
+  } catch (e) { return say(e.status === 401 ? "Wrong password, or this account is not the owner on the server." : serverError(e)); }
+  rerender("#h-removed");
+  toast("Connected to the shop server");
+};
+ACT.srvout = () => { try { localStorage.removeItem("bz:ownerToken"); } catch (e) { /* blocked */ } rerender("#ow_pass"); };
 
 /* ---------- Publish deletions for everyone ----------
    This site has no server, so the owner downloads removed.js and pushes it
    to GitHub (public/js/core/removed.js). Every visitor then loads it. */
 const unpublished = () => !sameIds(REMOVED, PUBLISHED_REMOVED);
 function removedPanel() {
+  if (API_URL) return serverPanel();
   const n = REMOVED.length, pub = PUBLISHED_REMOVED.length, s = k => (k === 1 ? "" : "s");
   return `<section class="sec panel stack" aria-labelledby="h-removed">
     <div class="row" style="justify-content:space-between">
